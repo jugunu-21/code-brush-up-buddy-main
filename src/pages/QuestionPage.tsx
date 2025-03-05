@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect, lazy, Suspense, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { questions } from "@/data/questions";
@@ -26,36 +26,28 @@ const importComponent = (questionId: string) => {
 const QuestionPage = () => {
   const { questionId } = useParams<{ questionId: string }>();
   const navigate = useNavigate();
-  
+
   const question = questions.find((q) => q.id === questionId);
-  
+  const DynamicComponent = useMemo(() =>
+    questionId ? importComponent(questionId) : null,
+    [questionId]
+  );
+
   const [code, setCode] = useState("");
   const [passedTests, setPassedTests] = useState<string[]>([]);
   const [timerRunning, setTimerRunning] = useState(true);
   const [timeSpent, setTimeSpent] = useState(0);
   const [progress, setProgress] = useState<UserProgress | null>(null);
   const [submitted, setSubmitted] = useState(false);
-  
-  const DynamicComponent = questionId ? importComponent(questionId) : null;
-  
-  const getNextQuestion = () => {
-    const allProgress = getAllUserProgress();
-    const completedIds = allProgress
-      .filter(p => p.completed)
-      .map(p => p.questionId);
-    
-    const nextQuestion = questions.find(q => !completedIds.includes(q.id) && q.id !== questionId);
-    return nextQuestion || questions[0];
-  };
-  
+
   useEffect(() => {
     if (!question) {
       navigate("/");
       return;
     }
-    
+
     setCode(question.starterCode);
-    
+
     const savedProgress = getUserProgress(questionId) as UserProgress | null;
     if (savedProgress) {
       setProgress(savedProgress);
@@ -75,7 +67,7 @@ const QuestionPage = () => {
       });
     }
   }, [question, questionId, navigate]);
-  
+
   useEffect(() => {
     return () => {
       if (progress) {
@@ -89,31 +81,11 @@ const QuestionPage = () => {
       }
     };
   }, [progress, timeSpent, passedTests]);
-  
-  if (!question) {
-    return null;
-  }
 
-  const handleTestsCompleted = (passedIds: string[]) => {
-    setPassedTests(passedIds);
-    
-    if (progress) {
-      const updatedProgress: UserProgress = {
-        ...progress,
-        timeSpentMs: timeSpent,
-        lastAttemptDate: new Date().toISOString(),
-        passedTestCases: passedIds,
-      };
-      
-      setProgress(updatedProgress);
-      saveUserProgress(updatedProgress);
-    }
-  };
-  
-  const handleTimeUpdate = (newTimeMs: number) => {
+  const handleTimeUpdate = useCallback((newTimeMs: number) => {
     setTimeSpent(newTimeMs);
-    
-    if (progress && newTimeMs % 10000 < 100) {
+
+    if (progress && newTimeMs % 30000 < 1000) {
       const updatedProgress: UserProgress = {
         ...progress,
         timeSpentMs: newTimeMs,
@@ -122,18 +94,34 @@ const QuestionPage = () => {
       };
       saveUserProgress(updatedProgress);
     }
-  };
-  
-  const toggleTimer = () => {
-    setTimerRunning(!timerRunning);
-  };
-  
-  const handleSubmit = () => {
+  }, [progress, passedTests]);
+
+  const toggleTimer = useCallback(() => {
+    setTimerRunning(prev => !prev);
+  }, []);
+
+  const handleTestsCompleted = useCallback((passedIds: string[]) => {
+    setPassedTests(passedIds);
+
+    if (progress) {
+      const updatedProgress: UserProgress = {
+        ...progress,
+        timeSpentMs: timeSpent,
+        lastAttemptDate: new Date().toISOString(),
+        passedTestCases: passedIds,
+      };
+
+      setProgress(updatedProgress);
+      saveUserProgress(updatedProgress);
+    }
+  }, [progress, timeSpent]);
+
+  const handleSubmit = useCallback(() => {
     setTimerRunning(false);
     setSubmitted(true);
-    
+
     const allPassed = passedTests.length === question.testCases.length;
-    
+
     if (allPassed) {
       const updatedProgress: UserProgress = {
         ...progress!,
@@ -142,14 +130,14 @@ const QuestionPage = () => {
         lastAttemptDate: new Date().toISOString(),
         passedTestCases: passedTests,
       };
-      
+
       setProgress(updatedProgress);
       saveUserProgress(updatedProgress);
-      
+
       toast.success("All tests passed! Question completed!", {
         duration: 3000,
       });
-      
+
       setTimeout(() => {
         const nextQuestion = getNextQuestion();
         if (nextQuestion) {
@@ -165,17 +153,17 @@ const QuestionPage = () => {
         lastAttemptDate: new Date().toISOString(),
         passedTestCases: passedTests,
       };
-      
+
       setProgress(updatedProgress);
       saveUserProgress(updatedProgress);
-      
+
       toast.error("Some tests are failing. Try again!", {
         duration: 3000,
       });
     }
-  };
-  
-  const handleSkip = () => {
+  }, [progress, timeSpent, passedTests, question.testCases.length, navigate]);
+
+  const handleSkip = useCallback(() => {
     if (progress) {
       const updatedProgress: UserProgress = {
         ...progress,
@@ -185,16 +173,16 @@ const QuestionPage = () => {
       };
       saveUserProgress(updatedProgress);
     }
-    
+
     const nextQuestion = getNextQuestion();
     if (nextQuestion) {
       navigate(`/question/${nextQuestion.id}`);
     } else {
       navigate("/");
     }
-  };
-  
-  const handleHome = () => {
+  }, [progress, timeSpent, passedTests, navigate]);
+
+  const handleHome = useCallback(() => {
     if (progress) {
       const updatedProgress: UserProgress = {
         ...progress,
@@ -203,11 +191,11 @@ const QuestionPage = () => {
         passedTestCases: passedTests,
       };
       saveUserProgress(updatedProgress);
+      toast.success("Progress saved successfully!");
     }
-    
     navigate("/");
-  };
-  
+  }, [progress, timeSpent, passedTests, navigate]);
+
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case "easy":
@@ -220,10 +208,32 @@ const QuestionPage = () => {
         return "bg-gray-500 text-white";
     }
   };
-  
+
   const isCompleted = progress?.completed || false;
   const timeSpentMinutes = Math.ceil(timeSpent / 60000);
   const isOverTime = timeSpentMinutes > question.averageTimeMin;
+
+  const timerProps = useMemo(() => ({
+    isRunning: timerRunning,
+    onTimeUpdate: handleTimeUpdate,
+    initialTimeMs: timeSpent,
+    onToggleRunning: toggleTimer,
+    averageTimeMin: question.averageTimeMin
+  }), [timerRunning, handleTimeUpdate, timeSpent, toggleTimer, question.averageTimeMin]);
+
+  const getNextQuestion = () => {
+    const allProgress = getAllUserProgress();
+    const completedIds = allProgress
+      .filter(p => p.completed)
+      .map(p => p.questionId);
+
+    const nextQuestion = questions.find(q => !completedIds.includes(q.id) && q.id !== questionId);
+    return nextQuestion || questions[0];
+  };
+
+  if (!question) {
+    return null;
+  }
 
   return (
     <div className="container py-6 px-4 mx-auto max-w-6xl">
@@ -236,10 +246,6 @@ const QuestionPage = () => {
       >
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={handleHome}>
-              <Home className="h-4 w-4 mr-1" /> Home
-            </Button>
-            
             <div className="flex items-center gap-1">
               <Badge variant="outline">
                 Question {questions.findIndex(q => q.id === questionId) + 1}/{questions.length}
@@ -249,16 +255,10 @@ const QuestionPage = () => {
               </Badge>
             </div>
           </div>
-          
-          <Timer
-            isRunning={timerRunning}
-            onTimeUpdate={handleTimeUpdate}
-            initialTimeMs={timeSpent}
-            onToggleRunning={toggleTimer}
-            averageTimeMin={question.averageTimeMin}
-          />
+
+          <Timer {...timerProps} />
         </div>
-        
+
         <div className="flex flex-col gap-2">
           <h1 className="text-3xl font-bold">{question.title}</h1>
           <div className="flex flex-wrap gap-1">
@@ -269,19 +269,25 @@ const QuestionPage = () => {
             ))}
           </div>
         </div>
-        
+
         <CollapsibleCode title="Description" defaultOpen={true}>
           <div className="prose max-w-none">
             <p className="whitespace-pre-wrap">{question.description}</p>
           </div>
         </CollapsibleCode>
-        
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
             <Card className="h-full">
               <CardContent className="pt-6 h-full">
                 {DynamicComponent ? (
-                  <Suspense fallback={<div className="p-4 text-center">Loading component...</div>}>
+                  <Suspense fallback={
+                    <div className="flex items-center justify-center h-full">
+                      <div className="animate-pulse text-muted-foreground">
+                        Loading component...
+                      </div>
+                    </div>
+                  }>
                     <CodeEditor
                       value={code}
                       componentToRender={<DynamicComponent />}
@@ -299,40 +305,40 @@ const QuestionPage = () => {
               </CardContent>
             </Card>
           </div>
-          
+
           <div className="space-y-6">
             <TestCaseRunner
               testCases={question.testCases}
               code={code}
               onTestsCompleted={handleTestsCompleted}
             />
-            
+
             <HintCard hints={question.hints} />
           </div>
         </div>
-        
+
         <div className="flex justify-between">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={handleHome}
             className="gap-1"
           >
             <Home className="h-4 w-4" />
             Save & Home
           </Button>
-          
+
           <div className="flex gap-2">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={handleSkip}
               className="gap-1"
             >
               <SkipForward className="h-4 w-4" />
               Skip
             </Button>
-            
-            <Button 
-              variant="default" 
+
+            <Button
+              variant="default"
               onClick={handleSubmit}
               disabled={submitted || passedTests.length === 0}
               className="gap-1"

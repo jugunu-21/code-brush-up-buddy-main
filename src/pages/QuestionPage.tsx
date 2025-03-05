@@ -1,0 +1,359 @@
+import { useState, useEffect, lazy, Suspense } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { questions } from "@/data/questions";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import CodeEditor, { CollapsibleCode } from "@/components/CodeEditor";
+import TestCaseRunner from "@/components/TestCaseRunner";
+import HintCard from "@/components/HintCard";
+import Timer from "@/components/Timer";
+import { Check, Home, Play, SkipForward } from "lucide-react";
+import { Question, UserProgress } from "@/lib/types";
+import { getUserProgress, saveUserProgress, getAllUserProgress } from "@/lib/storage";
+import { toast } from "sonner";
+
+const importComponent = (questionId: string) => {
+  try {
+    return lazy(() => import(`../components/questions/${questionId}/index.tsx`));
+  } catch (error) {
+    console.error(`Error importing component for ${questionId}:`, error);
+    return null;
+  }
+};
+
+const QuestionPage = () => {
+  const { questionId } = useParams<{ questionId: string }>();
+  const navigate = useNavigate();
+  
+  const question = questions.find((q) => q.id === questionId);
+  
+  const [code, setCode] = useState("");
+  const [passedTests, setPassedTests] = useState<string[]>([]);
+  const [timerRunning, setTimerRunning] = useState(true);
+  const [timeSpent, setTimeSpent] = useState(0);
+  const [progress, setProgress] = useState<UserProgress | null>(null);
+  const [submitted, setSubmitted] = useState(false);
+  
+  const DynamicComponent = questionId ? importComponent(questionId) : null;
+  
+  const getNextQuestion = () => {
+    const allProgress = getAllUserProgress();
+    const completedIds = allProgress
+      .filter(p => p.completed)
+      .map(p => p.questionId);
+    
+    const nextQuestion = questions.find(q => !completedIds.includes(q.id) && q.id !== questionId);
+    return nextQuestion || questions[0];
+  };
+  
+  useEffect(() => {
+    if (!question) {
+      navigate("/");
+      return;
+    }
+    
+    setCode(question.starterCode);
+    
+    const savedProgress = getUserProgress(questionId) as UserProgress | null;
+    if (savedProgress) {
+      setProgress(savedProgress);
+      setTimeSpent(savedProgress.timeSpentMs);
+      setPassedTests(savedProgress.passedTestCases);
+      setSubmitted(savedProgress.completed || false);
+      if (savedProgress.completed) {
+        setTimerRunning(false);
+      }
+    } else {
+      setProgress({
+        questionId: question.id,
+        completed: false,
+        timeSpentMs: 0,
+        lastAttemptDate: new Date().toISOString(),
+        passedTestCases: [],
+      });
+    }
+  }, [question, questionId, navigate]);
+  
+  useEffect(() => {
+    return () => {
+      if (progress) {
+        const updatedProgress: UserProgress = {
+          ...progress,
+          timeSpentMs: timeSpent,
+          lastAttemptDate: new Date().toISOString(),
+          passedTestCases: passedTests,
+        };
+        saveUserProgress(updatedProgress);
+      }
+    };
+  }, [progress, timeSpent, passedTests]);
+  
+  if (!question) {
+    return null;
+  }
+
+  const handleTestsCompleted = (passedIds: string[]) => {
+    setPassedTests(passedIds);
+    
+    if (progress) {
+      const updatedProgress: UserProgress = {
+        ...progress,
+        timeSpentMs: timeSpent,
+        lastAttemptDate: new Date().toISOString(),
+        passedTestCases: passedIds,
+      };
+      
+      setProgress(updatedProgress);
+      saveUserProgress(updatedProgress);
+    }
+  };
+  
+  const handleTimeUpdate = (newTimeMs: number) => {
+    setTimeSpent(newTimeMs);
+    
+    if (progress && newTimeMs % 10000 < 100) {
+      const updatedProgress: UserProgress = {
+        ...progress,
+        timeSpentMs: newTimeMs,
+        lastAttemptDate: new Date().toISOString(),
+        passedTestCases: passedTests,
+      };
+      saveUserProgress(updatedProgress);
+    }
+  };
+  
+  const toggleTimer = () => {
+    setTimerRunning(!timerRunning);
+  };
+  
+  const handleSubmit = () => {
+    setTimerRunning(false);
+    setSubmitted(true);
+    
+    const allPassed = passedTests.length === question.testCases.length;
+    
+    if (allPassed) {
+      const updatedProgress: UserProgress = {
+        ...progress!,
+        completed: true,
+        timeSpentMs: timeSpent,
+        lastAttemptDate: new Date().toISOString(),
+        passedTestCases: passedTests,
+      };
+      
+      setProgress(updatedProgress);
+      saveUserProgress(updatedProgress);
+      
+      toast.success("All tests passed! Question completed!", {
+        duration: 3000,
+      });
+      
+      setTimeout(() => {
+        const nextQuestion = getNextQuestion();
+        if (nextQuestion) {
+          navigate(`/question/${nextQuestion.id}`);
+        } else {
+          navigate("/");
+        }
+      }, 2000);
+    } else {
+      const updatedProgress: UserProgress = {
+        ...progress!,
+        timeSpentMs: timeSpent,
+        lastAttemptDate: new Date().toISOString(),
+        passedTestCases: passedTests,
+      };
+      
+      setProgress(updatedProgress);
+      saveUserProgress(updatedProgress);
+      
+      toast.error("Some tests are failing. Try again!", {
+        duration: 3000,
+      });
+    }
+  };
+  
+  const handleSkip = () => {
+    if (progress) {
+      const updatedProgress: UserProgress = {
+        ...progress,
+        timeSpentMs: timeSpent,
+        lastAttemptDate: new Date().toISOString(),
+        passedTestCases: passedTests,
+      };
+      saveUserProgress(updatedProgress);
+    }
+    
+    const nextQuestion = getNextQuestion();
+    if (nextQuestion) {
+      navigate(`/question/${nextQuestion.id}`);
+    } else {
+      navigate("/");
+    }
+  };
+  
+  const handleHome = () => {
+    if (progress) {
+      const updatedProgress: UserProgress = {
+        ...progress,
+        timeSpentMs: timeSpent,
+        lastAttemptDate: new Date().toISOString(),
+        passedTestCases: passedTests,
+      };
+      saveUserProgress(updatedProgress);
+    }
+    
+    navigate("/");
+  };
+  
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty) {
+      case "easy":
+        return "bg-difficulty-easy text-white";
+      case "medium":
+        return "bg-difficulty-medium text-black";
+      case "hard":
+        return "bg-difficulty-hard text-white";
+      default:
+        return "bg-gray-500 text-white";
+    }
+  };
+  
+  const isCompleted = progress?.completed || false;
+  const timeSpentMinutes = Math.ceil(timeSpent / 60000);
+  const isOverTime = timeSpentMinutes > question.averageTimeMin;
+
+  return (
+    <div className="container py-6 px-4 mx-auto max-w-6xl">
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -10 }}
+        transition={{ duration: 0.3 }}
+        className="space-y-6"
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={handleHome}>
+              <Home className="h-4 w-4 mr-1" /> Home
+            </Button>
+            
+            <div className="flex items-center gap-1">
+              <Badge variant="outline">
+                Question {questions.findIndex(q => q.id === questionId) + 1}/{questions.length}
+              </Badge>
+              <Badge className={getDifficultyColor(question.difficulty)}>
+                {question.difficulty}
+              </Badge>
+            </div>
+          </div>
+          
+          <Timer
+            isRunning={timerRunning}
+            onTimeUpdate={handleTimeUpdate}
+            initialTimeMs={timeSpent}
+            onToggleRunning={toggleTimer}
+            averageTimeMin={question.averageTimeMin}
+          />
+        </div>
+        
+        <div className="flex flex-col gap-2">
+          <h1 className="text-3xl font-bold">{question.title}</h1>
+          <div className="flex flex-wrap gap-1">
+            {question.topics.map((topic) => (
+              <Badge key={topic} variant="secondary" className="text-xs">
+                {topic}
+              </Badge>
+            ))}
+          </div>
+        </div>
+        
+        <CollapsibleCode title="Description" defaultOpen={true}>
+          <div className="prose max-w-none">
+            <p className="whitespace-pre-wrap">{question.description}</p>
+          </div>
+        </CollapsibleCode>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <Card className="h-full">
+              <CardContent className="pt-6 h-full">
+                {DynamicComponent ? (
+                  <Suspense fallback={<div className="p-4 text-center">Loading component...</div>}>
+                    <CodeEditor
+                      value={code}
+                      componentToRender={<DynamicComponent />}
+                      readOnly={true}
+                    />
+                  </Suspense>
+                ) : (
+                  <div className="p-6 border border-dashed rounded-md text-center">
+                    <p className="text-muted-foreground mb-2">Component not found</p>
+                    <p className="text-sm text-muted-foreground">
+                      Create <code>src/components/questions/{questionId}/index.tsx</code> to visualize your solution
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+          
+          <div className="space-y-6">
+            <TestCaseRunner
+              testCases={question.testCases}
+              code={code}
+              onTestsCompleted={handleTestsCompleted}
+            />
+            
+            <HintCard hints={question.hints} />
+          </div>
+        </div>
+        
+        <div className="flex justify-between">
+          <Button 
+            variant="outline" 
+            onClick={handleHome}
+            className="gap-1"
+          >
+            <Home className="h-4 w-4" />
+            Save & Home
+          </Button>
+          
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              onClick={handleSkip}
+              className="gap-1"
+            >
+              <SkipForward className="h-4 w-4" />
+              Skip
+            </Button>
+            
+            <Button 
+              variant="default" 
+              onClick={handleSubmit}
+              disabled={submitted || passedTests.length === 0}
+              className="gap-1"
+            >
+              {isCompleted ? (
+                <>
+                  <Check className="h-4 w-4" />
+                  Completed
+                </>
+              ) : (
+                <>
+                  <Play className="h-4 w-4" />
+                  Submit
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
+export default QuestionPage;

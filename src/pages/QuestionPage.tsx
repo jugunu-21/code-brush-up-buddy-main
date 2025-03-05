@@ -13,24 +13,55 @@ import { Check, Home, Play, SkipForward } from "lucide-react";
 import { Question, UserProgress } from "@/lib/types";
 import { getUserProgress, saveUserProgress, getAllUserProgress } from "@/lib/storage";
 import { toast } from "sonner";
+import React from "react";
 
-const importComponent = (questionId: string) => {
-  try {
-    return lazy(() => import(`../components/questions/${questionId}/index.tsx`));
-  } catch (error) {
-    console.error(`Error importing component for ${questionId}:`, error);
-    return null;
-  }
-};
+// const importComponent = (questionId: string) => {
+//   try {
+//     // return lazy(() =>
+//    return import(`../components/questions/${questionId}/index.tsx`)
+//     // );
+//   }
+//   catch (error) {
+//     console.error(`Error importing component for ${questionId}:`, error);
+//     return null;
+//   }
+// };
 
 const QuestionPage = () => {
   const { questionId } = useParams<{ questionId: string }>();
   const navigate = useNavigate();
 
   const question = questions.find((q) => q.id === questionId);
-  const DynamicComponent = useMemo(() =>
-    questionId ? importComponent(questionId) : null,
-    [questionId]
+  // const DynamicComponent = useMemo(() =>
+  //   questionId ? importComponent(questionId) : null,
+  //   [questionId]
+  // );
+
+  const DynamicComponent = useMemo(
+    () => React.lazy(() =>
+      import(`../components/questions/${questionId}/index.tsx`)
+        .catch(() => {
+          console.error(`Error loading component for ${questionId}`);
+          return {
+            default: () => <div className="p-6 border border-dashed rounded-md text-center">
+              <p className="text-muted-foreground mb-2">Component not found</p>
+              <p className="text-sm text-muted-foreground">
+                Create <code>src/components/questions/{questionId}/index.tsx</code> to visualize your solution
+              </p>
+              <p className="text-sm text-muted-foreground">
+                And paste this code in the editor:
+              </p>
+              <pre className="code-editor font-mono text-sm w-full min-h-[300px] 
+                  p-4 bg-gray-50 border border-gray-200 rounded-md
+                  focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                  transition-all duration-200 overflow-auto">
+                <code>{code}</code>
+              </pre>
+            </div>
+          };
+        })
+    ),
+    [questionId] // Only recreate when questionId changes
   );
 
   const [code, setCode] = useState("");
@@ -280,28 +311,21 @@ const QuestionPage = () => {
           <div className="lg:col-span-2">
             <Card className="h-full">
               <CardContent className="pt-6 h-full">
-                {DynamicComponent ? (
-                  <Suspense fallback={
-                    <div className="flex items-center justify-center h-full">
-                      <div className="animate-pulse text-muted-foreground">
-                        Loading component...
-                      </div>
+
+                <Suspense fallback={
+                  <div className="flex items-center justify-center h-full">
+                    <div className="animate-pulse text-muted-foreground">
+                      Loading component...
                     </div>
-                  }>
-                    <CodeEditor
-                      value={code}
-                      componentToRender={<DynamicComponent />}
-                      readOnly={true}
-                    />
-                  </Suspense>
-                ) : (
-                  <div className="p-6 border border-dashed rounded-md text-center">
-                    <p className="text-muted-foreground mb-2">Component not found</p>
-                    <p className="text-sm text-muted-foreground">
-                      Create <code>src/components/questions/{questionId}/index.tsx</code> to visualize your solution
-                    </p>
                   </div>
-                )}
+                }>
+                  <CodeEditor
+                    value={code}
+                    componentToRender={<DynamicComponent />}
+                    readOnly={true}
+                  />
+                </Suspense>
+
               </CardContent>
             </Card>
           </div>

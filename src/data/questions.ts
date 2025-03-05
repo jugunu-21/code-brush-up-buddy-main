@@ -1,5 +1,5 @@
-
 import { Question } from "@/lib/types";
+import ReactDOM from "react-dom/client";
 
 // Test functions will be implemented as string evaluations in the real app
 // Just placeholders here for demonstration
@@ -38,25 +38,68 @@ export default Counter;`,
         id: "q1t1",
         description: "Component renders without crashing",
         expectedOutput: true,
-        testFunction: (code: string) => true, // Placeholder implementation
+        testFunction: (code: string) => {
+          try {
+            // Check if the code has the required elements
+            const hasImport = code.includes('import React') && code.includes('useState');
+            const hasComponent = code.includes('export const Counter');
+            const hasReturn = code.includes('return') && code.includes('div');
+            return hasImport && hasComponent && hasReturn;
+          } catch (error) {
+            console.error('Test failed:', error);
+            return false;
+          }
+        }
       },
       {
         id: "q1t2",
         description: "Initial count value is 0",
         expectedOutput: true,
-        testFunction: (code: string) => true, // Placeholder implementation
+        testFunction: (code: string) => {
+          try {
+            // Check for useState initialization
+            const hasStateInit = code.includes('useState(0)');
+            const hasCountVar = code.includes('[count, setCount]');
+            return hasStateInit && hasCountVar;
+          } catch (error) {
+            console.error('Test failed:', error);
+            return false;
+          }
+        }
       },
       {
         id: "q1t3",
         description: "Clicking increment button increases count by 1",
         expectedOutput: true,
-        testFunction: (code: string) => true, // Placeholder implementation
+        testFunction: (code: string) => {
+          try {
+            // Check for increment functionality
+            const hasIncrementFunc = code.includes('increment');
+            const hasSetCount = code.includes('setCount(count + 1)');
+            const hasButton = code.includes('button') && code.includes('onClick={increment}');
+            return hasIncrementFunc && hasSetCount && hasButton;
+          } catch (error) {
+            console.error('Test failed:', error);
+            return false;
+          }
+        }
       },
       {
         id: "q1t4",
         description: "Clicking decrement button decreases count by 1",
         expectedOutput: true,
-        testFunction: (code: string) => true, // Placeholder implementation
+        testFunction: (code: string) => {
+          try {
+            // Check for decrement functionality
+            const hasDecrementFunc = code.includes('decrement');
+            const hasSetCount = code.includes('setCount(count - 1)');
+            const hasButton = code.includes('button') && code.includes('onClick={decrement}');
+            return hasDecrementFunc && hasSetCount && hasButton;
+          } catch (error) {
+            console.error('Test failed:', error);
+            return false;
+          }
+        }
       }
     ],
     hints: [

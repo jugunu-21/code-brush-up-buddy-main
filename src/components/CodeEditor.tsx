@@ -42,11 +42,11 @@ const CodeEditor = ({ value, componentToRender, readOnly = true }: CodeEditorPro
 };
 
 // Collapsible code block component
-export const CollapsibleCode = ({ 
-  title, 
-  children, 
-  defaultOpen = true 
-}: { 
+export const CollapsibleCode = ({
+  title,
+  children,
+  defaultOpen = true
+}: {
   title: string;
   children: React.ReactNode;
   defaultOpen?: boolean;

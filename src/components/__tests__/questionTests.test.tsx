@@ -2,20 +2,19 @@ import React, { Suspense } from 'react';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { questions } from "@/data/questions";
-import Counter from '../Counter';
 
-const questionId = "q1"
+const questionId = "q2"
 // For now, we'll only test the Counter component
-const counterQuestion = questions.find(q => q.id === questionId);
+const currentQuestion = questions.find(q => q.id === questionId);
 const DynamicComponent = React.lazy(() =>
     import(`../questions/${questionId}/index.tsx`))
 
-if (!counterQuestion) {
-    throw new Error("Counter question not found in questions data");
+if (!currentQuestion) {
+    throw new Error("Question not found in questions data");
 }
 
 describe('Question Tests', () => {
-    describe(counterQuestion.title, () => {
+    describe(currentQuestion.title, () => {
         beforeEach(async () => {
             await act(async () => {
                 render(
@@ -26,7 +25,7 @@ describe('Question Tests', () => {
             });
         });
 
-        counterQuestion.testCases.forEach(testCase => {
+        currentQuestion.testCases.forEach(testCase => {
             it(testCase.description, async () => {
                 if (testCase.testImplementation) {
                     await act(async () => {

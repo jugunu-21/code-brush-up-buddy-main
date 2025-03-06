@@ -1,7 +1,6 @@
 import React, { Suspense } from 'react';
 import { render, screen, fireEvent, cleanup, act } from '@testing-library/react';
 import { TestCase } from './types';
-import Counter from '../components/Counter';
 
 export const runTestImplementation = async (
     questionId: string,

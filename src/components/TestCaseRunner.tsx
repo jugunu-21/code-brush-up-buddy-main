@@ -19,8 +19,7 @@ const TestCaseRunner = ({ testCases, code, onTestsCompleted }: TestCaseRunnerPro
   const runTests = () => {
     setRunning(true);
     const newResults: Record<string, boolean> = {};
-    
-    // Properly evaluate each test case against the provided code
+
     setTimeout(() => {
       testCases.forEach((testCase) => {
         try {
@@ -32,14 +31,14 @@ const TestCaseRunner = ({ testCases, code, onTestsCompleted }: TestCaseRunnerPro
           newResults[testCase.id] = false;
         }
       });
-      
+
       setResults(newResults);
       setRunning(false);
-      
+
       const passedIds = Object.entries(newResults)
         .filter(([_, passed]) => passed)
         .map(([id]) => id);
-        
+
       onTestsCompleted(passedIds);
     }, 1000);
   };
@@ -52,8 +51,8 @@ const TestCaseRunner = ({ testCases, code, onTestsCompleted }: TestCaseRunnerPro
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-medium">Test Cases</h3>
-        <Button 
-          onClick={runTests} 
+        <Button
+          onClick={runTests}
           disabled={running}
           className="gap-2"
         >
@@ -61,7 +60,7 @@ const TestCaseRunner = ({ testCases, code, onTestsCompleted }: TestCaseRunnerPro
           Run Tests
         </Button>
       </div>
-      
+
       {Object.keys(results).length > 0 && (
         <Alert className={allPassed ? "bg-green-50 border-green-200" : "bg-yellow-50 border-yellow-200"}>
           <AlertDescription>
@@ -77,7 +76,7 @@ const TestCaseRunner = ({ testCases, code, onTestsCompleted }: TestCaseRunnerPro
           {testCases.map((testCase) => {
             const isRun = testCase.id in results;
             const isPassed = results[testCase.id] === true;
-            
+
             return (
               <motion.div
                 key={testCase.id}
@@ -85,13 +84,12 @@ const TestCaseRunner = ({ testCases, code, onTestsCompleted }: TestCaseRunnerPro
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
                 transition={{ duration: 0.2 }}
-                className={`p-3 border rounded-md ${
-                  isRun 
-                    ? isPassed 
-                      ? "border-green-200 bg-green-50" 
-                      : "border-red-200 bg-red-50" 
+                className={`p-3 border rounded-md ${isRun
+                    ? isPassed
+                      ? "border-green-200 bg-green-50"
+                      : "border-red-200 bg-red-50"
                     : "border-gray-200 bg-gray-50"
-                }`}
+                  }`}
               >
                 <div className="flex items-start gap-2">
                   {isRun ? (

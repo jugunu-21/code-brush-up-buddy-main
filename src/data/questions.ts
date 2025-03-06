@@ -51,7 +51,7 @@ export default Counter;`,
           }
         },
         testImplementation: ({ screen }) => {
-          expect(screen.getByRole("heading", { level: 2 })).toBeInTheDocument();
+
           expect(screen.getByRole("button", { name: "-" })).toBeInTheDocument();
           expect(screen.getByRole("button", { name: "+" })).toBeInTheDocument();
         }

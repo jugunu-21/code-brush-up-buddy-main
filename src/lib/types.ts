@@ -1,7 +1,6 @@
-
 export type Difficulty = 'easy' | 'medium' | 'hard';
 
-export type Topic = 
+export type Topic =
   | 'React Hooks'
   | 'State Management'
   | 'Components'
@@ -18,6 +17,7 @@ export interface TestCase {
   description: string;
   expectedOutput: string | number | boolean | object | null;
   testFunction: (code: string) => boolean;
+  testImplementation?: (utils: { screen: any; fireEvent: any }) => void;
 }
 
 export interface Hint {

@@ -49,6 +49,11 @@ export default Counter;`,
             console.error('Test failed:', error);
             return false;
           }
+        },
+        testImplementation: ({ screen }) => {
+          expect(screen.getByRole("heading", { level: 2 })).toBeInTheDocument();
+          expect(screen.getByRole("button", { name: "-" })).toBeInTheDocument();
+          expect(screen.getByRole("button", { name: "+" })).toBeInTheDocument();
         }
       },
       {
@@ -65,6 +70,9 @@ export default Counter;`,
             console.error('Test failed:', error);
             return false;
           }
+        },
+        testImplementation: ({ screen }) => {
+          expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent("0");
         }
       },
       {
@@ -82,6 +90,11 @@ export default Counter;`,
             console.error('Test failed:', error);
             return false;
           }
+        },
+        testImplementation: ({ screen, fireEvent }) => {
+          const incrementButton = screen.getByRole("button", { name: "+" });
+          fireEvent.click(incrementButton);
+          expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent("1");
         }
       },
       {
@@ -99,6 +112,11 @@ export default Counter;`,
             console.error('Test failed:', error);
             return false;
           }
+        },
+        testImplementation: ({ screen, fireEvent }) => {
+          const decrementButton = screen.getByRole("button", { name: "-" });
+          fireEvent.click(decrementButton);
+          expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent("-1");
         }
       }
     ],
@@ -532,36 +550,36 @@ export const Calculator = () => {
 
 export default Calculator;`,
     testCases: [
-      {
-        id: "q5t1",
-        description: "Component renders without crashing",
-        expectedOutput: true,
-        testFunction: (code: string) => true, // Placeholder implementation
-      },
-      {
-        id: "q5t2",
-        description: "Toggle button shows/hides results",
-        expectedOutput: true,
-        testFunction: (code: string) => true, // Placeholder implementation
-      },
-      {
-        id: "q5t3",
-        description: "Sum calculation is correct (should be 55)",
-        expectedOutput: true,
-        testFunction: (code: string) => true, // Placeholder implementation
-      },
-      {
-        id: "q5t4",
-        description: "Product calculation is correct (should be 3628800)",
-        expectedOutput: true,
-        testFunction: (code: string) => true, // Placeholder implementation
-      },
-      {
-        id: "q5t5",
-        description: "useMemo is used to optimize calculations",
-        expectedOutput: true,
-        testFunction: (code: string) => true, // Placeholder implementation
-      }
+      // {
+      //   id: "q5t1",
+      //   description: "Component renders without crashing",
+      //   expectedOutput: true,
+      //   testFunction: (code: string) => true, // Placeholder implementation
+      // },
+      // {
+      //   id: "q5t2",
+      //   description: "Toggle button shows/hides results",
+      //   expectedOutput: true,
+      //   testFunction: (code: string) => true, // Placeholder implementation
+      // },
+      // {
+      //   id: "q5t3",
+      //   description: "Sum calculation is correct (should be 55)",
+      //   expectedOutput: true,
+      //   testFunction: (code: string) => true, // Placeholder implementation
+      // },
+      // {
+      //   id: "q5t4",
+      //   description: "Product calculation is correct (should be 3628800)",
+      //   expectedOutput: true,
+      //   testFunction: (code: string) => true, // Placeholder implementation
+      // },
+      // {
+      //   id: "q5t5",
+      //   description: "useMemo is used to optimize calculations",
+      //   expectedOutput: true,
+      //   testFunction: (code: string) => true, // Placeholder implementation
+      // }
     ],
     hints: [
       {

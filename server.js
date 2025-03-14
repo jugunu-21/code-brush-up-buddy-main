@@ -39,26 +39,25 @@ app.post('/run-command', (req, res) => {
 // API endpoint to run tests
 app.post('/run-tests', (req, res) => {
     const { questionId } = req.body;
-
-    // Create an environment variable to pass the questionId to the test
     const env = { ...process.env, TEST_QUESTION_ID: questionId || 'q2' };
-
-    // Log the questionId being used
     console.log(`Running tests with questionIddd: ${questionId || 'q2'}`);
 
-    exec('npm test', { env }, (error, stdout, stderr) => {
+    const testCommand = process.platform === 'win32' ? 'cmd.exe /c npm test' : 'npm test';
+
+    exec(testCommand, { env, shell: true }, (error, stdout, stderr) => {
         // Get the combined output
         const output = stdout + stderr;
 
         // Parse the test results to extract test IDs and status
         const testResults = [];
         const lines = output.split('\n');
-
+        // console.log('lines trimmed', line_trimmed)
         // Find lines with test results (starting with ✓ or ✕)
         lines.forEach(line => {
             const line_trimmed = line.trim();
             // Check for passing tests
-            if (line_trimmed.startsWith('✓')) {
+
+            if (line_trimmed.startsWith('√')) {
                 // Extract the test ID which should be in square brackets [testId]
                 const match = line_trimmed.match(/\[(\w+)\]/);
                 if (match && match[1]) {
@@ -69,8 +68,9 @@ app.post('/run-tests', (req, res) => {
                     });
                 }
             }
+
             // Check for failing tests
-            else if (line_trimmed.startsWith('✕')) {
+            else if (line_trimmed.startsWith('×')) {
                 // Extract the test ID which should be in square brackets [testId]
                 const match = line_trimmed.match(/\[(\w+)\]/);
                 if (match && match[1]) {

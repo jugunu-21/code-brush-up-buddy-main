@@ -41,13 +41,10 @@ app.post('/run-tests', (req, res) => {
     const { questionId } = req.body;
     const env = { ...process.env, TEST_QUESTION_ID: questionId || 'q2' };
     console.log(`Running tests with questionIddd: ${questionId || 'q2'}`);
-
     const testCommand = process.platform === 'win32' ? 'cmd.exe /c npm test' : 'npm test';
-
     exec(testCommand, { env, shell: true }, (error, stdout, stderr) => {
         // Get the combined output
         const output = stdout + stderr;
-
         // Parse the test results to extract test IDs and status
         const testResults = [];
         const lines = output.split('\n');

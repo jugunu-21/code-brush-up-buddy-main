@@ -228,13 +228,19 @@ export default Counter;`
         expectedOutput: true,
         testFunction: (code: string) => true,
         testImplementation: async ({ screen, fireEvent }) => {
-          const toggleButton = screen.getByRole("button");
           const consoleSpy = jest.spyOn(console, 'log');
+          consoleSpy.mockClear(); // Clear any previous calls
 
+          const toggleButton = screen.getByRole("button");
+
+          // First toggle (OFF -> ON)
           fireEvent.click(toggleButton);
+          await screen.findByText("ON");
           expect(consoleSpy).toHaveBeenCalledWith("Toggle changed to: ON");
 
+          // Second toggle (ON -> OFF)
           fireEvent.click(toggleButton);
+          await screen.findByText("OFF");
           expect(consoleSpy).toHaveBeenCalledWith("Toggle changed to: OFF");
 
           consoleSpy.mockRestore();

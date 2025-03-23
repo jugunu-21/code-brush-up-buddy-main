@@ -14,7 +14,7 @@ const queryClient = new QueryClient();
 // Wrap routes with AnimatePresence for page transitions
 const AnimatedRoutes = () => {
   const location = useLocation();
-  
+
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>

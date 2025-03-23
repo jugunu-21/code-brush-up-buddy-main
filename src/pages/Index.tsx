@@ -10,7 +10,7 @@ import { getAllUserProgress } from "@/lib/storage";
 const Index = () => {
   const [filteredQuestions, setFilteredQuestions] = useState<Question[]>(questions);
   const [userProgress, setUserProgress] = useState<UserProgress[]>([]);
-  
+
   // Get all unique topics from questions
   const allTopics = Array.from(
     new Set(questions.flatMap((q) => q.topics))
@@ -75,7 +75,7 @@ const Index = () => {
 
   return (
     <div className="container py-8 px-4 mx-auto max-w-6xl">
-      <motion.div 
+      <motion.div
         className="mb-8 text-center"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -85,18 +85,18 @@ const Index = () => {
         <p className="text-xl text-muted-foreground mb-6 max-w-3xl mx-auto">
           Practice essential React concepts with interactive coding challenges
         </p>
-        
+
         <div className="flex items-center justify-center gap-4">
           <div className="bg-primary/10 rounded-lg px-5 py-2 text-center">
             <p className="text-sm text-muted-foreground">Questions</p>
             <p className="text-2xl font-semibold">{totalQuestions}</p>
           </div>
-          
+
           <div className="bg-primary/10 rounded-lg px-5 py-2 text-center">
             <p className="text-sm text-muted-foreground">Completed</p>
             <p className="text-2xl font-semibold">{completedQuestions}</p>
           </div>
-          
+
           <div className="bg-primary/10 rounded-lg px-5 py-2 text-center">
             <p className="text-sm text-muted-foreground">Progress</p>
             <p className="text-2xl font-semibold">{completionPercentage}%</p>
@@ -104,8 +104,8 @@ const Index = () => {
         </div>
       </motion.div>
 
-      <QuestionFilters 
-        onFilterChange={handleFilterChange} 
+      <QuestionFilters
+        onFilterChange={handleFilterChange}
         availableTopics={allTopics}
       />
 

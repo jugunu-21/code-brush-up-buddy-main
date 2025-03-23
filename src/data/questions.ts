@@ -39,7 +39,7 @@ export default Counter;`,
         description: "Component renders without crashing",
         expectedOutput: true,
         testFunction: () => true,
-        testImplementation: ({ screen }) => {
+        testImplementation: async ({ screen }) => {
           expect(screen.getByRole("button", { name: "-" })).toBeInTheDocument();
           expect(screen.getByRole("button", { name: "+" })).toBeInTheDocument();
           expect(screen.getByRole("heading", { level: 2 })).toBeInTheDocument();
@@ -50,8 +50,8 @@ export default Counter;`,
         description: "Initial count value is 0",
         expectedOutput: true,
         testFunction: () => true,
-        testImplementation: ({ screen }) => {
-          const counterValue = screen.getByRole("heading", { level: 2 });
+        testImplementation: async ({ screen }) => {
+          const counterValue = await screen.findByRole("heading", { level: 2 });
           expect(counterValue).toHaveTextContent("0");
         }
       },
@@ -229,16 +229,15 @@ export default Counter;`
         testFunction: (code: string) => true,
         testImplementation: async ({ screen, fireEvent }) => {
           const toggleButton = screen.getByRole("button");
-          const originalConsoleLog = console.log;
+          const consoleSpy = jest.spyOn(console, 'log');
 
           fireEvent.click(toggleButton);
-
-          expect(console.log).toHaveBeenCalledWith("Toggle changed to: ON");
+          expect(consoleSpy).toHaveBeenCalledWith("Toggle changed to: ON");
 
           fireEvent.click(toggleButton);
-          expect(console.log).toHaveBeenCalledWith("Toggle changed to: OFF");
+          expect(consoleSpy).toHaveBeenCalledWith("Toggle changed to: OFF");
 
-          console.log = originalConsoleLog;
+          consoleSpy.mockRestore();
         }
       }
     ],

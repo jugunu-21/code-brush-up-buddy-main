@@ -1,69 +1,100 @@
-# Welcome to your Lovable project
+# React Code Brush-Up Buddy
 
-## Project info
+An interactive React coding challenge application to help you practice and improve your React skills.
 
-**URL**: https://lovable.dev/projects/d9af8ae3-0bfb-4104-b889-2dc3b27591a9
+## Features
 
-## How can I edit this code?
+- Multiple coding challenges with varying difficulty levels
+- Interactive test runner that provides immediate feedback
+- Test cases that verify your implementation
+- Progress tracking to see which challenges you've completed
+- Filter challenges by difficulty, topic, or completion status
 
-There are several ways of editing your application.
+## Technologies Used
 
-**Use Lovable**
+This project is built with:
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/d9af8ae3-0bfb-4104-b889-2dc3b27591a9) and start prompting.
+- React
+- TypeScript
+- Vite
+- shadcn-ui
+- Tailwind CSS
+- Jest for testing
 
-Changes made via Lovable will be committed automatically to this repo.
+## Getting Started
 
-**Use your preferred IDE**
+### Prerequisites
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+- Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+### Installation
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
+# Step 1: Clone the repository
 git clone <YOUR_GIT_URL>
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# Step 2: Navigate to the project directory
+cd code-brush-up-buddy
 
-# Step 3: Install the necessary dependencies.
-npm i
+# Step 3: Install dependencies
+npm install
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Step 4: Start the development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## Running Tests
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+You can run tests in two ways:
 
-**Use GitHub Codespaces**
+1. Using the command line:
+```sh
+npm test
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+2. Using the UI:
+   - Navigate to any challenge page
+   - Click the "Run Tests" button to execute tests for that challenge
 
-## What technologies are used for this project?
+You can also specify which question's tests to run:
 
-This project is built with .
+```sh
+TEST_QUESTION_ID=q1 npm test
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Project Structure
 
-## How can I deploy this project?
+- `src/components/questions/` - Contains all the challenge components
+- `src/components/__tests__/` - Contains test files
+- `src/data/questions.ts` - Contains challenge definitions and test cases
+- `server.js` - Simple Express server for running tests
 
-Simply open [Lovable](https://lovable.dev/projects/d9af8ae3-0bfb-4104-b889-2dc3b27591a9) and click on Share -> Publish.
+## Editing the Code
 
-## I want to use a custom domain - is that possible?
+### Using your preferred IDE
 
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+1. Clone the repo and make changes locally
+2. Use standard Git workflow to commit and push changes
+
+### Editing directly in GitHub
+
+- Navigate to the file you want to edit
+- Click the "Edit" button (pencil icon)
+- Make your changes and commit them
+
+### Using GitHub Codespaces
+
+- Navigate to the main repository page
+- Click "Code" > "Codespaces" > "New codespace"
+- Edit files and commit changes from within the Codespace
+
+## Deployment
+
+You can deploy this project using any static site hosting service:
+
+- Netlify
+- Vercel
+- GitHub Pages
+- AWS Amplify
+
+Simply build the project with `npm run build` and deploy the contents of the `dist` directory.
